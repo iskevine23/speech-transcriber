@@ -16,7 +16,13 @@ from transformers import pipeline
 try:
     import spaces  # only present on Hugging Face Spaces
 
-    gpu = spaces.GPU(duration=120)
+    def _duration(y, segs, model_id, lang):
+        # ask ZeroGPU for only as much GPU time as this clip needs,
+        # so the daily quota lasts longer (SR is defined below, used at call time)
+        secs = len(y) / SR
+        return int(min(120, max(20, 15 + 0.5 * secs)))
+
+    gpu = spaces.GPU(duration=_duration)
 except ImportError:
 
     def gpu(fn):
